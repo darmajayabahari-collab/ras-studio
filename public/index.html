@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAS Studio — AI Image Generator</title>
+<meta name="description" content="Platform AI image generator untuk Adobe Stock contributors. Batch mode, queue system, gratis.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f6fa;--white:#fff;--border:#e5e7eb;
+  --text:#1a1a2e;--muted:#6b7280;--light:#f9fafb;
+  --primary:#7c3aed;--primary-h:#6d28d9;--primary-light:#ede9fe;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:inherit;font-size:14px}
+input,textarea,select{font-family:inherit;font-size:14px}
+.page{display:none}.page.active{display:block}
+
+/* ── LANDING ── */
+.land-nav{background:var(--white);border-bottom:1px solid var(--border);padding:14px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-size:18px;font-weight:800;color:var(--primary)}
+.nav-links{display:flex;gap:8px}
+.nbtn{padding:8px 16px;border-radius:9px;border:1px solid var(--border);background:var(--white);color:var(--text);font-weight:500;transition:all .15s}
+.nbtn:hover{border-color:var(--primary);color:var(--primary)}
+.nbtn.solid{background:var(--primary);color:#fff;border-color:var(--primary)}
+.nbtn.solid:hover{background:var(--primary-h)}
+
+.hero{min-height:85vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;background:linear-gradient(160deg,#faf5ff 0%,#ede9fe 40%,#dbeafe 100%)}
+.hero-pill{display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1px solid #ddd6fe;border-radius:20px;padding:5px 16px;font-size:12px;font-weight:600;color:var(--primary);margin-bottom:22px}
+.hero h1{font-size:46px;font-weight:900;line-height:1.12;letter-spacing:-.5px;margin-bottom:18px;max-width:700px}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--primary),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:17px;color:var(--muted);max-width:540px;margin:0 auto 34px;line-height:1.65}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-cta .btn{display:inline-flex;align-items:center;gap:7px;padding:13px 26px;border-radius:12px;font-size:15px;font-weight:700;border:none;transition:all .15s}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h);transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,58,237,.3)}
+.btn-o{background:var(--white);color:var(--text);border:1px solid var(--border)!important}.btn-o:hover{border-color:var(--primary)!important;color:var(--primary)}
+
+.feat-strip{background:var(--white);border-top:1px solid var(--border);padding:48px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px}
+.feat{text-align:center;padding:16px}
+.feat-ic{font-size:32px;margin-bottom:10px}
+.feat-t{font-weight:700;font-size:15px;margin-bottom:6px}
+.feat-d{font-size:13px;color:var(--muted);line-height:1.55}
+
+/* ── AUTH ── */
+.auth-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#faf5ff,#ede9fe);padding:20px}
+.auth-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:38px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(124,58,237,.1)}
+.auth-logo{text-align:center;margin-bottom:26px}
+.auth-logo .brand{font-size:24px}
+.auth-logo p{font-size:13px;color:var(--muted);margin-top:4px}
+.auth-h{font-size:20px;font-weight:800;margin-bottom:4px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.fi{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;outline:none;color:var(--text);transition:all .15s;background:var(--white)}
+.fi:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124,58,237,.09)}
+.auth-err{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12px;padding:9px 13px;border-radius:9px;margin-bottom:13px;display:none}
+.auth-err.show{display:block}
+.auth-btn{width:100%;padding:13px;background:var(--primary);border:none;border-radius:11px;color:#fff;font-size:14px;font-weight:700;transition:all .15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.auth-btn:hover{background:var(--primary-h)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-foot{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.al{color:var(--primary);font-weight:600;cursor:pointer;background:none;border:none;font-size:13px}
+
+/* ── APP SHELL ── */
+.app{display:flex;height:100vh;overflow:hidden}
+.sb{width:210px;min-width:210px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sb-logo{padding:17px 18px;font-size:16px;font-weight:800;color:var(--primary);border-bottom:1px solid var(--border)}
+.sb-sec{padding:14px 18px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.si{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:13px;color:#374151;background:none;border:none;width:100%;text-align:left;transition:background .12s}
+.si:hover{background:var(--light)}
+.si.on{background:var(--primary-light);color:var(--primary);font-weight:700}
+.si svg{width:15px;height:15px;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:9px;padding:7px;border-radius:9px;cursor:pointer;transition:background .12s}
+.sb-user:hover{background:var(--light)}
+.av{width:32px;height:32px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;flex-shrink:0}
+.sb-un{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px}
+.sb-ue{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px}
+.logout-btn{width:100%;margin-top:8px;padding:7px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--muted);transition:all .12s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+.app-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:11px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:700}
+.app-body{flex:1;overflow-y:auto;padding:24px}
+
+/* ── TABS ── */
+.tab{display:none}.tab.on{display:block}
+
+/* ── DASHBOARD ── */
+.dash-hi{margin-bottom:22px}
+.dash-hi h2{font-size:22px;font-weight:800}
+.dash-hi p{font-size:13px;color:var(--muted);margin-top:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:16px}
+.stat-l{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.stat-v{font-size:26px;font-weight:800}
+.stat-s{font-size:11px;color:var(--muted);margin-top:3px}
+.qa-box{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:18px;margin-bottom:20px}
+.qa-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.qa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.qa-btn{display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--light);font-size:12px;font-weight:600;color:#374151;transition:all .15s}
+.qa-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.qa-btn .qi{font-size:22px}
+.recent-box{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:18px}
+.recent-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.recent-head h3{font-size:13px;font-weight:700}
+.view-all{font-size:12px;color:var(--primary);background:none;border:none;font-weight:600}
+.recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px}
+.rt{aspect-ratio:1;border-radius:9px;object-fit:cover;width:100%;background:linear-gradient(135deg,#ede9fe,#dbeafe);border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.rt:hover{transform:scale(1.04)}
+
+/* ── GENERATE ── */
+.gen-wrap{display:flex;gap:18px;align-items:flex-start}
+.gen-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+.gen-right{width:340px;min-width:340px;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:0;display:flex;flex-direction:column}
+
+.gc{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px}
+.gc-t{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:14px}
+.gc-t svg{width:14px;height:14px;color:var(--primary)}
+
+/* queue bar */
+.qbar{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 14px;display:none;align-items:center;gap:14px;flex-wrap:wrap}
+.qbar.on{display:flex}
+.qs{display:flex;align-items:center;gap:5px;font-size:12px}
+.qd{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.qd.r{background:var(--blue);animation:blink 1s infinite}
+.qd.w{background:var(--yellow)}
+.qd.d{background:var(--green)}
+.qd.f{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.qstop{margin-left:auto;padding:5px 12px;font-size:11px;font-weight:700;border-radius:7px;border:1.5px solid var(--red);color:var(--red);background:var(--white)}
+.qstop:hover{background:#fef2f2}
+
+.mode-tabs{display:flex;background:#f3f4f6;border-radius:9px;padding:3px;width:fit-content}
+.mt{padding:7px 16px;font-size:13px;font-weight:500;border-radius:7px;border:none;background:transparent;color:var(--muted);transition:all .15s}
+.mt.on{background:var(--white);color:var(--text);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+.upload-zone{border:2px dashed #d1d5db;border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:all .15s;position:relative}
+.upload-zone:hover{border-color:var(--primary);background:var(--primary-light)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uz-ic{width:36px;height:36px;background:#f3f4f6;border-radius:9px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.uz-txt{font-size:12px;color:var(--muted)}
+.uz-lnk{color:var(--primary);font-weight:600}
+#ref-img{max-width:100%;max-height:120px;border-radius:8px;display:none;margin:0 auto}
+.ref-clr{display:none;font-size:11px;color:var(--red);background:none;border:none;margin-top:6px}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:var(--light);cursor:pointer;color:#374151;font-weight:500;transition:all .12s}
+.chip:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+
+.import-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.import-lbl{display:flex;align-items:center;gap:5px;padding:5px 11px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:7px;background:var(--white);cursor:pointer;color:#374151;transition:all .15s;position:relative}
+.import-lbl input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.import-lbl:hover{border-color:var(--primary);color:var(--primary)}
+.import-note{font-size:11px;color:var(--muted)}
+
+textarea.ta{width:100%;border:1.5px solid var(--border);border-radius:9px;font-size:13px;padding:12px;resize:vertical;min-height:150px;outline:none;line-height:1.7;transition:border-color .15s}
+textarea.ta:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124,58,237,.06)}
+.ta-foot{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+.ta-hint{font-size:11px;color:var(--muted)}
+.ta-cnt{font-size:11px;color:var(--muted);background:#f3f4f6;padding:2px 8px;border-radius:20px}
+
+.opts-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.og label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+select,.ti{width:100%;background:var(--white);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;padding:7px 10px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%236b7280' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border-color .15s}
+select:focus{border-color:var(--primary)}
+.ti{background-image:none}
+.neg-lbl{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 4px}
+
+.gen-btn{width:100%;padding:14px;background:var(--primary);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.gen-btn:hover{background:var(--primary-h)}
+.gen-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* right panel */
+.rp-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.rp-t{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700}
+.live{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green)}
+.live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite}
+.ftabs{display:flex;padding:9px 12px;gap:4px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
+.ft{padding:3px 10px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--muted);transition:all .12s}
+.ft.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.ft span{font-size:10px;margin-left:2px}
+
+.rscroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;max-height:calc(100vh - 320px)}
+.empty-r{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--muted);gap:8px;text-align:center}
+.empty-r svg{width:40px;height:40px;opacity:.2}
+.empty-r p{font-size:12px;line-height:1.6}
+
+.rcard{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:box-shadow .15s}
+.rcard:hover{box-shadow:0 3px 12px rgba(0,0,0,.07)}
+.ri{width:100%;aspect-ratio:1;background:#f3f4f6;position:relative;overflow:hidden}
+.ri img{width:100%;height:100%;object-fit:cover;display:block}
+.skel{width:100%;height:100%;background:linear-gradient(90deg,#f0f0f0 25%,#e6e6e6 50%,#f0f0f0 75%);background-size:200% 100%;animation:sh 1.4s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.rbadge{position:absolute;top:6px;right:6px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.rbadge.pending{background:rgba(245,158,11,.15);color:#92400e;border:1px solid rgba(245,158,11,.3)}
+.rbadge.running{background:rgba(59,130,246,.15);color:#1d4ed8;border:1px solid rgba(59,130,246,.3)}
+.rbadge.success{background:rgba(16,185,129,.15);color:#065f46;border:1px solid rgba(16,185,129,.3)}
+.rbadge.failed{background:rgba(239,68,68,.15);color:#991b1b;border:1px solid rgba(239,68,68,.3)}
+.rnum{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px}
+.rfoot{padding:8px 10px}
+.rpt{font-size:11px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.ract{display:flex;gap:4px}
+.ra{flex:1;padding:5px 4px;font-size:11px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:#374151;display:flex;align-items:center;justify-content:center;gap:3px;transition:background .12s}
+.ra:hover{background:var(--light)}
+.ra.dl{background:var(--primary);color:#fff;border-color:var(--primary)}
+.ra.dl:hover{background:var(--primary-h)}
+
+/* logs */
+.logs-w{border-top:1px solid var(--border);flex-shrink:0}
+.logs-tog{padding:8px 14px;font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;user-select:none}
+.logs-b{padding:0 12px 8px;max-height:80px;overflow-y:auto;display:none}
+.logs-b.open{display:block}
+.ll{font-size:10px;font-family:monospace;color:var(--muted);line-height:1.7}
+.ll.ok{color:var(--green)}.ll.err{color:var(--red)}.ll.info{color:var(--blue)}
+
+/* ── HISTORY ── */
+.htoolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.hsearch{flex:1;min-width:200px;border:1.5px solid var(--border);border-radius:9px;padding:9px 13px;outline:none;transition:border-color .15s}
+.hsearch:focus{border-color:var(--primary)}
+.hclr{padding:9px 14px;font-size:12px;font-weight:600;border:1.5px solid var(--red);color:var(--red);border-radius:9px;background:var(--white)}
+.hclr:hover{background:#fef2f2}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.hi{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .15s}
+.hi:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-1px)}
+.hi-thumb{aspect-ratio:1;background:linear-gradient(135deg,#ede9fe,#dbeafe)}
+.hi-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.hi-info{padding:9px 10px}
+.hi-p{font-size:11px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px}
+.hi-d{font-size:10px;color:#9ca3af}
+.hempty{text-align:center;padding:60px 20px;color:var(--muted)}
+.hempty svg{width:48px;height:48px;opacity:.2;margin:0 auto 12px;display:block}
+
+/* ── TOOLS ── */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.tc{background:var(--white);border:1.5px solid var(--border);border-radius:13px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:all .15s;cursor:pointer}
+.tc:hover{border-color:var(--primary);box-shadow:0 4px 14px rgba(124,58,237,.1)}
+.ti-icon{font-size:28px}
+.ti-name{font-size:14px;font-weight:700}
+.ti-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.ti-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:var(--primary-light);color:var(--primary);width:fit-content}
+
+/* ── SETTINGS ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:700px}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:20px}
+.sc-t{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.sc-t svg{width:15px;height:15px;color:var(--primary)}
+.sr{margin-bottom:12px}
+.sr label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.ssave{padding:9px 18px;background:var(--primary);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700}
+.ssave:hover{background:var(--primary-h)}
+.sdanger{padding:9px 18px;background:var(--white);color:var(--red);border:1.5px solid var(--red);border-radius:9px;font-size:13px;font-weight:700;margin-top:8px}
+.sdanger:hover{background:#fef2f2}
+.sinfo{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:18px;padding:26px;max-width:500px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.18)}
+.modal h3{font-size:16px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.modal img{width:100%;border-radius:10px;margin-bottom:14px;max-height:300px;object-fit:contain;background:#f3f4f6}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end}
+.mbtn{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--white);transition:all .15s}
+.mbtn:hover{background:var(--light)}
+.mbtn.p{background:var(--primary);color:#fff;border-color:var(--primary)}
+.mbtn.p:hover{background:var(--primary-h)}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:11px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* spinner in auth btn */
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spinning .7s linear infinite;flex-shrink:0}
+@keyframes spinning{to{transform:rotate(360deg)}}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:10px}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LANDING ══════════ -->
+<div class="page active" id="p-land">
+  <nav class="land-nav">
+    <div class="brand">⚡ RAS Studio</div>
+    <div class="nav-links">
+      <button class="nbtn" onclick="show('p-login')">Login</button>
+      <button class="nbtn solid" onclick="show('p-reg')">Mulai Gratis →</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="hero-pill">⚡ Gratis · Unlimited · No API Key</div>
+    <h1>Generate <em>Flat Vector</em><br>Illustrations untuk<br>Adobe Stock</h1>
+    <p>Platform AI image generator khusus para kontributor Adobe Stock Indonesia. Batch mode, queue otomatis, auto-download.</p>
+    <div class="hero-cta">
+      <button class="btn btn-p" onclick="show('p-reg')">🚀 Daftar Gratis Sekarang</button>
+      <button class="btn btn-o" onclick="show('p-login')">Sudah punya akun</button>
+    </div>
+  </div>
+  <div class="feat-strip">
+    <div class="feat"><div class="feat-ic">⚡</div><div class="feat-t">Batch Mode</div><div class="feat-d">Import file .txt, generate ratusan gambar dengan queue 3 paralel otomatis.</div></div>
+    <div class="feat"><div class="feat-ic">🎨</div><div class="feat-t">Flat Vector Ready</div><div class="feat-d">Template prompt terarah khusus Adobe Stock flat vector illustrations.</div></div>
+    <div class="feat"><div class="feat-ic">📂</div><div class="feat-t">Auto Download</div><div class="feat-d">Setiap gambar sukses langsung tersimpan ke folder RAS-Studio di PC kamu.</div></div>
+    <div class="feat"><div class="feat-ic">🕐</div><div class="feat-t">History Lengkap</div><div class="feat-d">Semua hasil tersimpan per akun. Bisa lihat, download, dan export kapanpun.</div></div>
+  </div>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="page" id="p-login">
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="brand">⚡ RAS Studio</div><p>AI Image Generator Platform</p></div>
+      <div class="auth-h">Selamat datang kembali</div>
+      <div class="auth-sub">Masuk ke akun kamu</div>
+      <div class="auth-err" id="lerr"></div>
+      <div class="fg"><label>Email</label><input type="email" class="fi" id="lem" placeholder="nama@email.com" onkeydown="if(event.key==='Enter')login()"></div>
+      <div class="fg"><label>Password</label><input type="password" class="fi" id="lpw" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+      <button class="auth-btn" id="lbtn" onclick="login()">Masuk ke Akun</button>
+      <div class="auth-foot">Belum punya akun? <button class="al" onclick="show('p-reg')">Daftar Sekarang</button> &nbsp;·&nbsp; <button class="al" onclick="show('p-land')">← Kembali</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ REGISTER ══════════ -->
+<div class="page" id="p-reg">
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="brand">⚡ RAS Studio</div><p>Buat akun gratis · Unlimited generate</p></div>
+      <div class="auth-h">Buat akun baru</div>
+      <div class="auth-sub">Gratis selamanya, tidak perlu kartu kredit</div>
+      <div class="auth-err" id="rerr"></div>
+      <div class="fg"><label>Nama Lengkap</label><input type="text" class="fi" id="rname" placeholder="Nama kamu" onkeydown="if(event.key==='Enter')register()"></div>
+      <div class="fg"><label>Email</label><input type="email" class="fi" id="rem" placeholder="nama@email.com" onkeydown="if(event.key==='Enter')register()"></div>
+      <div class="fg"><label>Password</label><input type="password" class="fi" id="rpw" placeholder="Min. 6 karakter" onkeydown="if(event.key==='Enter')register()"></div>
+      <button class="auth-btn" id="rbtn" onclick="register()">Buat Akun Gratis</button>
+      <div class="auth-foot">Sudah punya akun? <button class="al" onclick="show('p-login')">Login</button> &nbsp;·&nbsp; <button class="al" onclick="show('p-land')">← Kembali</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div class="page" id="p-app">
+  <div class="app">
+    <aside class="sb">
+      <div class="sb-logo">⚡ RAS Studio</div>
+      <div class="sb-sec">Menu</div>
+      <button class="si on" id="sb-dash" onclick="tab('dash')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
+        Dashboard
+      </button>
+      <button class="si" id="sb-gen" onclick="tab('gen')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke-width="2"/></svg>
+        Generate Image
+      </button>
+      <button class="si" id="sb-hist" onclick="tab('hist')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        History
+      </button>
+      <button class="si" id="sb-tools" onclick="tab('tools')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Tools
+      </button>
+      <div class="sb-sec">Akun</div>
+      <button class="si" id="sb-set" onclick="tab('set')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </button>
+      <div class="sb-foot">
+        <div class="sb-user" onclick="tab('set')">
+          <div class="av" id="uav">R</div>
+          <div><div class="sb-un" id="uname">User</div><div class="sb-ue" id="uemail">user@email.com</div></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Keluar</button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <div class="topbar">
+        <span class="topbar-title" id="tbar-title">Dashboard</span>
+      </div>
+      <div class="app-body">
+
+        <!-- DASHBOARD -->
+        <div class="tab on" id="t-dash">
+          <div class="dash-hi"><h2 id="dgreet">Selamat datang! 👋</h2><p>Ringkasan aktivitas RAS Studio kamu</p></div>
+          <div class="stats">
+            <div class="stat"><div class="stat-l">Total Generate</div><div class="stat-v" id="s-total" style="color:var(--primary)">0</div><div class="stat-s">semua waktu</div></div>
+            <div class="stat"><div class="stat-l">Sukses</div><div class="stat-v" id="s-ok" style="color:var(--green)">0</div><div class="stat-s">berhasil</div></div>
+            <div class="stat"><div class="stat-l">Session Ini</div><div class="stat-v" id="s-sess">0</div><div class="stat-s">sejak dibuka</div></div>
+            <div class="stat"><div class="stat-l">Engine</div><div class="stat-v" style="font-size:13px;margin-top:6px">Pollinations AI</div><div class="stat-s">gratis · unlimited</div></div>
+          </div>
+          <div class="qa-box">
+            <div class="qa-title">Quick Actions</div>
+            <div class="qa-grid">
+              <button class="qa-btn" onclick="tab('gen');setMode('single')"><span class="qi">🎨</span>Single Generate</button>
+              <button class="qa-btn" onclick="tab('gen');setMode('batch')"><span class="qi">⚡</span>Batch Generate</button>
+              <button class="qa-btn" onclick="tab('hist')"><span class="qi">🕐</span>Lihat History</button>
+              <button class="qa-btn" onclick="tab('tools')"><span class="qi">🛠</span>Buka Tools</button>
+            </div>
+          </div>
+          <div class="recent-box">
+            <div class="recent-head"><h3>Generate Terbaru</h3><button class="view-all" onclick="tab('hist')">Lihat semua →</button></div>
+            <div class="recent-grid" id="rgrid"></div>
+          </div>
+        </div>
+
+        <!-- GENERATE -->
+        <div class="tab" id="t-gen">
+          <div class="gen-wrap">
+            <div class="gen-left">
+              <div class="qbar" id="qbar">
+                <div class="qs"><div class="qd r"></div><span id="qr">0 running</span></div>
+                <div class="qs"><div class="qd w"></div><span id="qw">0 waiting</span></div>
+                <div class="qs"><div class="qd d"></div><span id="qd">0 done</span></div>
+                <div class="qs"><div class="qd f"></div><span id="qf">0 failed</span></div>
+                <button class="qstop" onclick="stopQ()">⏹ Stop</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="mode-tabs">
+                  <button class="mt on" id="mt-s" onclick="setMode('single')">Single Mode</button>
+                  <button class="mt" id="mt-b" onclick="setMode('batch')">Batch Mode</button>
+                </div>
+                <span style="font-size:12px;color:var(--muted)" id="mode-d">1 gambar per generate</span>
+              </div>
+              <div class="gc">
+                <div class="gc-t"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload Foto Referensi <span style="font-weight:400;color:var(--muted)">(Opsional)</span></div>
+                <div class="upload-zone">
+                  <input type="file" id="rfile" accept="image/*" onchange="prevRef(event)">
+                  <img id="ref-img" alt="ref">
+                  <div id="ref-ph"><div class="uz-ic"><svg width="17" height="17" fill="none" stroke="#9ca3af" viewBox="0 0 24 24"><path stroke-width="2" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div><p class="uz-txt">Tarik foto ke sini atau <span class="uz-lnk">klik untuk upload</span></p></div>
+                </div>
+                <button class="ref-clr" id="rclr" onclick="clrRef()">✕ Hapus referensi</button>
+              </div>
+              <div class="gc">
+                <div class="gc-t"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span id="plbl">Tulis Prompt</span></div>
+                <div class="import-row" id="irow" style="display:none">
+                  <label class="import-lbl"><input type="file" accept=".txt" onchange="importTxt(event)"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8" stroke-width="2"/></svg>Import .txt</label>
+                  <span class="import-note" id="inote">1 baris = 1 prompt</span>
+                </div>
+                <div class="chips">
+                  <span class="chip" onclick="chip('flat')">🎨 Flat Vector</span>
+                  <span class="chip" onclick="chip('health')">🏥 Healthcare</span>
+                  <span class="chip" onclick="chip('biz')">💼 Business</span>
+                  <span class="chip" onclick="chip('tech')">💻 Tech/AI</span>
+                  <span class="chip" onclick="chip('nature')">🌿 Nature</span>
+                  <span class="chip" onclick="chip('edu')">📚 Education</span>
+                  <span class="chip" onclick="chip('finance')">💰 Finance</span>
+                </div>
+                <textarea class="ta" id="pta" placeholder="Simple flat vector illustration of a doctor..." oninput="updCnt()"></textarea>
+                <div class="ta-foot"><span class="ta-hint" id="tahint"></span><span class="ta-cnt" id="tacnt">0</span></div>
+                <div id="sopts">
+                  <label class="neg-lbl">Negative Prompt</label>
+                  <input type="text" class="ti" id="neg" placeholder="blurry, realistic, photo, watermark, text...">
+                  <div class="opts-g">
+                    <div class="og"><label>Model</label><select id="msel"><option value="flux">Flux</option><option value="flux-realism">Flux Realism</option><option value="flux-anime">Flux Anime</option><option value="flux-3d">Flux 3D</option><option value="turbo">Turbo</option></select></div>
+                    <div class="og"><label>Rasio</label><select id="rsel"><option value="1024x1024">1:1 Square</option><option value="1792x1024">16:9 Wide</option><option value="1024x1792">9:16 Portrait</option><option value="1344x768">4:3</option></select></div>
+                    <div class="og"><label>Seed</label><select id="ssel"><option value="random">Random</option><option value="42">Fixed 42</option></select></div>
+                  </div>
+                </div>
+              </div>
+              <button class="gen-btn" id="gbtn" onclick="startGen()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke-width="2"/></svg><span id="glbl">Generate Image</span></button>
+            </div>
+            <!-- RIGHT -->
+            <div class="gen-right">
+              <div class="rp-head"><div class="rp-t"><svg width="13" height="13" fill="none" stroke="var(--primary)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg>Hasil &amp; Riwayat</div><div class="live">Live</div></div>
+              <div class="ftabs">
+                <button class="ft on" onclick="filt('all',this)">Semua<span id="ca">0</span></button>
+                <button class="ft" onclick="filt('success',this)">Sukses<span id="cs">0</span></button>
+                <button class="ft" onclick="filt('running',this)">Proses<span id="cr">0</span></button>
+                <button class="ft" onclick="filt('pending',this)">Antri<span id="cp">0</span></button>
+                <button class="ft" onclick="filt('failed',this)">Gagal<span id="cf">0</span></button>
+              </div>
+              <div class="rscroll" id="rscroll">
+                <div class="empty-r" id="empty-r"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/><path stroke-width="2" d="M21 15l-5-5L5 21"/></svg><p>Belum ada gambar.<br>Klik Generate untuk mulai.</p></div>
+              </div>
+              <div class="logs-w"><div class="logs-tog" onclick="togLog()"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>SYSTEM LOGS <span id="larrow">▸</span></div><div class="logs-b" id="logb"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="tab" id="t-hist">
+          <div style="margin-bottom:18px"><h2 style="font-size:18px;font-weight:800">History Generate</h2><p style="font-size:13px;color:var(--muted);margin-top:3px">Semua gambar yang berhasil di-generate</p></div>
+          <div class="htoolbar"><input class="hsearch" id="hsearch" type="text" placeholder="🔍 Cari prompt..." oninput="renderHist()"><button class="hclr" onclick="clrHist()">🗑 Hapus Semua</button></div>
+          <div class="hgrid" id="hgrid"></div>
+          <div class="hempty" id="hempty" style="display:none"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p style="font-size:13px">Belum ada history.</p></div>
+        </div>
+
+        <!-- TOOLS -->
+        <div class="tab" id="t-tools">
+          <div style="margin-bottom:18px"><h2 style="font-size:18px;font-weight:800">Tools</h2><p style="font-size:13px;color:var(--muted);margin-top:3px">Alat bantu workflow Adobe Stock</p></div>
+          <div class="tgrid">
+            <div class="tc" onclick="tab('gen');setMode('batch')"><div class="ti-icon">⚡</div><div class="ti-name">Batch Generator</div><div class="ti-desc">Import .txt, generate ratusan gambar dengan queue 3 paralel.</div><span class="ti-badge">Generate</span></div>
+            <div class="tc" onclick="promptBuilder()"><div class="ti-icon">✍️</div><div class="ti-name">Prompt Builder</div><div class="ti-desc">Buat prompt flat vector Adobe Stock dari template terarah.</div><span class="ti-badge">Productivity</span></div>
+            <div class="tc" onclick="window.open('https://www.remove.bg','_blank')"><div class="ti-icon">✂️</div><div class="ti-name">Background Remover</div><div class="ti-desc">Hapus background gambar di remove.bg (tab baru).</div><span class="ti-badge">External</span></div>
+            <div class="tc" onclick="metaTool()"><div class="ti-icon">🏷️</div><div class="ti-name">Metadata Generator</div><div class="ti-desc">Buat title, description &amp; keywords untuk Adobe Stock upload.</div><span class="ti-badge">Stock</span></div>
+            <div class="tc" onclick="window.open('https://stock.adobe.com/search?k=flat+vector+illustration','_blank')"><div class="ti-icon">🔍</div><div class="ti-name">Adobe Stock Finder</div><div class="ti-desc">Cari referensi flat vector di Adobe Stock untuk riset tren.</div><span class="ti-badge">Research</span></div>
+            <div class="tc" onclick="exportHist()"><div class="ti-icon">📦</div><div class="ti-name">Export Prompts</div><div class="ti-desc">Export semua prompt history ke .txt untuk pipeline ComfyUI.</div><span class="ti-badge">Export</span></div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="tab" id="t-set">
+          <div style="margin-bottom:18px"><h2 style="font-size:18px;font-weight:800">Settings</h2><p style="font-size:13px;color:var(--muted);margin-top:3px">Kelola akun dan preferensi</p></div>
+          <div class="sgrid">
+            <div class="sc"><div class="sc-t"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Profil</div>
+              <div class="sr"><label>Nama</label><input type="text" class="fi" id="sname" placeholder="Nama kamu"></div>
+              <div class="sr"><label>Email</label><input type="email" class="fi" id="semail" readonly style="background:#f9fafb;color:var(--muted)"></div>
+              <button class="ssave" onclick="saveProf()">Simpan Profil</button>
+            </div>
+            <div class="sc"><div class="sc-t"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>Generate Default</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="og"><label>Model</label><select id="dmodel"><option value="flux">Flux</option><option value="flux-realism">Flux Realism</option><option value="turbo">Turbo</option></select></div>
+                <div class="og"><label>Rasio</label><select id="dratio"><option value="1024x1024">1:1 Square</option><option value="1792x1024">16:9</option><option value="1024x1792">9:16</option></select></div>
+              </div>
+              <div style="margin-top:10px"><label style="font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em">Concurrent Queue</label><select id="dconc"><option value="2">2 paralel</option><option value="3" selected>3 paralel</option><option value="5">5 paralel</option></select></div>
+              <button class="ssave" style="margin-top:12px" onclick="savePrefs()">Simpan</button>
+            </div>
+            <div class="sc"><div class="sc-t"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Ganti Password</div>
+              <div class="sr"><label>Password Baru</label><input type="password" class="fi" id="sp1" placeholder="Password baru"></div>
+              <div class="sr"><label>Konfirmasi</label><input type="password" class="fi" id="sp2" placeholder="Ulangi password"></div>
+              <button class="ssave" onclick="chgPass()">Ganti Password</button>
+            </div>
+            <div class="sc"><div class="sc-t" style="color:var(--red)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Danger Zone</div>
+              <div class="sinfo">Hapus semua data (history, akun) dari browser. Tidak bisa dibatalkan.</div>
+              <button class="sdanger" onclick="delAcc()">Hapus Semua Data</button>
+              <button class="sdanger" style="border-color:var(--muted);color:var(--muted)" onclick="logout()">Logout</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <h3 id="mtitle">Preview</h3>
+    <p id="mprpt"></p>
+    <img id="mimg" src="" alt="">
+    <div class="modal-acts">
+      <button class="mbtn" onclick="document.getElementById('modal').classList.remove('open')">Tutup</button>
+      <button class="mbtn p" id="mdl">⬇ Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ CONFIG ══
+const BASE = ''; // empty = relative, Vercel will handle /api/*
+
+// ══ STORAGE ══
+const LS = {
+  g: k => { try { return JSON.parse(localStorage.getItem('ras_'+k)) } catch { return null }},
+  s: (k,v) => localStorage.setItem('ras_'+k, JSON.stringify(v)),
+  d: k => localStorage.removeItem('ras_'+k)
+};
+
+// ══ PAGE ROUTER ══
+function show(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══ AUTH ══
+function users() { return LS.g('users') || {} }
+function curUser() { return LS.g('cu') }
+
+async function register() {
+  const name = document.getElementById('rname').value.trim();
+  const email = document.getElementById('rem').value.trim().toLowerCase();
+  const pw = document.getElementById('rpw').value;
+  const err = document.getElementById('rerr');
+  const btn = document.getElementById('rbtn');
+  err.classList.remove('show');
+
+  if (!name || !email || !pw) { err.textContent='Semua field wajib diisi.'; err.classList.add('show'); return; }
+  if (!email.includes('@')) { err.textContent='Format email tidak valid.'; err.classList.add('show'); return; }
+  if (pw.length < 6) { err.textContent='Password minimal 6 karakter.'; err.classList.add('show'); return; }
+
+  const all = users();
+  if (all[email]) { err.textContent='Email sudah terdaftar.'; err.classList.add('show'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin"></div> Mendaftar...';
+
+  // Validate via API
+  try {
+    const res = await fetch(BASE + '/api/auth', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'register', name, email, password:pw })
+    });
+    const data = await res.json();
+    if (!data.ok) { err.textContent = data.error || 'Gagal register.'; err.classList.add('show'); btn.disabled=false; btn.innerHTML='Buat Akun Gratis'; return; }
+  } catch {
+    // Offline / local — allow anyway
+  }
+
+  all[email] = { name, email, pw, createdAt: new Date().toISOString() };
+  LS.s('users', all);
+  LS.s('cu', { name, email });
+  btn.disabled = false;
+  btn.innerHTML = 'Buat Akun Gratis';
+  enterApp(name, email);
+  toast('Akun berhasil dibuat! Selamat datang 🎉');
+}
+
+async function login() {
+  const email = document.getElementById('lem').value.trim().toLowerCase();
+  const pw = document.getElementById('lpw').value;
+  const err = document.getElementById('lerr');
+  const btn = document.getElementById('lbtn');
+  err.classList.remove('show');
+
+  if (!email || !pw) { err.textContent='Email dan password wajib diisi.'; err.classList.add('show'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin"></div> Masuk...';
+
+  const all = users();
+  if (!all[email]) { err.textContent='Email tidak ditemukan.'; err.classList.add('show'); btn.disabled=false; btn.innerHTML='Masuk ke Akun'; return; }
+  if (all[email].pw !== pw) { err.textContent='Password salah.'; err.classList.add('show'); btn.disabled=false; btn.innerHTML='Masuk ke Akun'; return; }
+
+  LS.s('cu', { name: all[email].name, email });
+  btn.disabled = false;
+  btn.innerHTML = 'Masuk ke Akun';
+  enterApp(all[email].name, email);
+  toast('Selamat datang kembali, ' + all[email].name.split(' ')[0] + '! 👋');
+}
+
+function logout() {
+  LS.d('cu');
+  queue = []; running = 0; sessCount = 0;
+  show('p-land');
+  toast('Kamu sudah logout.');
+}
+
+function enterApp(name, email) {
+  document.getElementById('uname').textContent = name;
+  document.getElementById('uemail').textContent = email;
+  document.getElementById('uav').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('dgreet').textContent = 'Selamat datang, ' + name.split(' ')[0] + '! 👋';
+  document.getElementById('sname').value = name;
+  document.getElementById('semail').value = email;
+  show('p-app');
+  tab('dash');
+  loadPrefs();
+  updDash();
+}
+
+function saveProf() {
+  const u = curUser(); if (!u) return;
+  const name = document.getElementById('sname').value.trim();
+  if (!name) { toast('Nama tidak boleh kosong.'); return; }
+  const all = users(); all[u.email].name = name; LS.s('users', all);
+  LS.s('cu', {...u, name});
+  document.getElementById('uname').textContent = name;
+  document.getElementById('uav').textContent = name.charAt(0).toUpperCase();
+  toast('Profil disimpan ✓');
+}
+
+function chgPass() {
+  const u = curUser(); if (!u) return;
+  const p1 = document.getElementById('sp1').value;
+  const p2 = document.getElementById('sp2').value;
+  if (!p1 || p1.length < 6) { toast('Password minimal 6 karakter.'); return; }
+  if (p1 !== p2) { toast('Password tidak cocok.'); return; }
+  const all = users(); all[u.email].pw = p1; LS.s('users', all);
+  document.getElementById('sp1').value = '';
+  document.getElementById('sp2').value = '';
+  toast('Password berhasil diubah ✓');
+}
+
+function savePrefs() {
+  const p = { model: document.getElementById('dmodel').value, ratio: document.getElementById('dratio').value, conc: parseInt(document.getElementById('dconc').value) };
+  LS.s('prefs', p); CONC = p.conc;
+  toast('Preferensi disimpan ✓');
+}
+
+function loadPrefs() {
+  const p = LS.g('prefs'); if (!p) return;
+  document.getElementById('dmodel').value = p.model || 'flux';
+  document.getElementById('dratio').value = p.ratio || '1024x1024';
+  document.getElementById('dconc').value = p.conc || 3;
+  document.getElementById('msel').value = p.model || 'flux';
+  document.getElementById('rsel').value = p.ratio || '1024x1024';
+  if (p.conc) CONC = p.conc;
+}
+
+function delAcc() {
+  if (!confirm('Hapus semua data? Tidak bisa dikembalikan.')) return;
+  const u = curUser();
+  if (u) { const all = users(); delete all[u.email]; LS.s('users', all); LS.d('h_'+u.email); }
+  LS.d('cu'); show('p-land'); toast('Data dihapus.');
+}
+
+// ══ TAB ══
+function tab(t) {
+  ['dash','gen','hist','tools','set'].forEach(x => {
+    document.getElementById('t-'+x).classList.remove('on');
+    const s = document.getElementById('sb-'+x);
+    if (s) s.classList.remove('on');
+  });
+  document.getElementById('t-'+t).classList.add('on');
+  const s = document.getElementById('sb-'+t);
+  if (s) s.classList.add('on');
+  const titles = {dash:'Dashboard',gen:'Generate Image',hist:'History',tools:'Tools',set:'Settings'};
+  document.getElementById('tbar-title').textContent = titles[t]||t;
+  if (t==='hist') renderHist();
+  if (t==='dash') updDash();
+}
+
+// ══ HISTORY ══
+function hkey() { const u=curUser(); return u?'h_'+u.email:'h_g'; }
+function getH() { return LS.g(hkey())||[]; }
+function saveH(h) { LS.s(hkey(), h); }
+function addH(item) {
+  const h = getH();
+  h.unshift({id:item.id, prompt:item.prompt, url:item.url, ts:new Date().toISOString()});
+  if (h.length>500) h.pop();
+  saveH(h);
+}
+
+function renderHist() {
+  const q = document.getElementById('hsearch').value.toLowerCase();
+  let h = getH();
+  if (q) h = h.filter(i => i.prompt.toLowerCase().includes(q));
+  const g = document.getElementById('hgrid');
+  const e = document.getElementById('hempty');
+  g.innerHTML = '';
+  if (!h.length) { e.style.display='block'; return; }
+  e.style.display = 'none';
+  h.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'hi';
+    d.innerHTML = `<div class="hi-thumb"><img src="${item.url}" loading="lazy" alt=""></div><div class="hi-info"><div class="hi-p">${esc(item.prompt)}</div><div class="hi-d">${new Date(item.ts).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}</div></div>`;
+    d.onclick = () => openModal(item);
+    g.appendChild(d);
+  });
+}
+
+function clrHist() {
+  if (!confirm('Hapus semua history?')) return;
+  saveH([]); renderHist(); updDash(); toast('History dihapus.');
+}
+
+// ══ DASHBOARD ══
+let sessCount = 0;
+function updDash() {
+  const h = getH();
+  document.getElementById('s-total').textContent = h.length;
+  document.getElementById('s-ok').textContent = h.length;
+  document.getElementById('s-sess').textContent = sessCount;
+  const g = document.getElementById('rgrid');
+  g.innerHTML = '';
+  if (!h.length) { g.innerHTML='<div style="font-size:12px;color:var(--muted);grid-column:1/-1;padding:20px 0">Belum ada gambar.</div>'; return; }
+  h.slice(0,8).forEach(item => {
+    const img = document.createElement('img');
+    img.className = 'rt'; img.src = item.url; img.loading = 'lazy';
+    img.onclick = () => openModal(item);
+    g.appendChild(img);
+  });
+}
+
+// ══ GENERATE SYSTEM ══
+let CONC = 3;
+let mode = 'single';
+let activeF = 'all';
+let stopped = false;
+let queue = [];
+let running = 0;
+
+const CHIPS = {
+  flat:    'Simple flat vector illustration of a professional at a modern workspace. Clean desk with laptop, coffee mug, and plants. Minimalist background, pastel color scheme. Modern, detailed, scalable vector style.',
+  health:  'Simple flat vector illustration of a doctor in a modern hospital setting. Standing, holding a digital tablet with health data. White coat, stethoscope. Minimalist background. Blue and white color scheme.',
+  biz:     'Simple flat vector illustration of a business team meeting in a modern office. People around a table with analytics charts. Minimalist background. Professional blue and teal color scheme.',
+  tech:    'Simple flat vector illustration of a developer with AI data streams and holographic screens. Futuristic office. Minimalist background. Purple and blue color scheme. Modern scalable vector style.',
+  nature:  'Simple flat vector illustration of a peaceful forest scene with mountains, trees and a calm lake. Birds flying. Minimalist background. Green and earth tones.',
+  edu:     'Simple flat vector illustration of a teacher in a modern classroom with a digital whiteboard. Students at desks. Minimalist background. Warm color scheme.',
+  finance: 'Simple flat vector illustration of a financial analyst at a desk with charts and data dashboards. Modern office. Minimalist background. Blue and gold color scheme.'
+};
+
+function chip(k) {
+  const ta = document.getElementById('pta');
+  ta.value = mode==='batch' ? (ta.value.trim()?ta.value.trim()+'\n':'')+CHIPS[k] : CHIPS[k];
+  updCnt();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mt-s').classList.toggle('on', m==='single');
+  document.getElementById('mt-b').classList.toggle('on', m==='batch');
+  document.getElementById('sopts').style.display = m==='single'?'block':'none';
+  document.getElementById('irow').style.display = m==='batch'?'flex':'none';
+  document.getElementById('plbl').textContent = m==='batch'?'Tulis Prompt Batch (1 Baris = 1 Prompt)':'Tulis Prompt';
+  document.getElementById('mode-d').textContent = m==='batch'?'1 baris = 1 gambar terpisah':'1 gambar per generate';
+  document.getElementById('glbl').textContent = m==='batch'?'Generate Batch':'Generate Image';
+  document.getElementById('pta').placeholder = m==='batch'?'Tulis setiap prompt di baris baru...\nContoh:\nSimple flat vector illustration of a doctor...\nSimple flat vector illustration of a teacher...':'Simple flat vector illustration of a doctor in a modern hospital setting...';
+  updCnt();
+}
+
+function updCnt() {
+  const v = document.getElementById('pta').value;
+  if (mode==='batch') {
+    const n = v.split('\n').filter(l=>l.trim()).length;
+    document.getElementById('tacnt').textContent = n+' prompt';
+    document.getElementById('tahint').textContent = 'Tiap baris = 1 gambar';
+  } else {
+    document.getElementById('tacnt').textContent = v.length+' kar';
+    document.getElementById('tahint').textContent = '';
+  }
+}
+
+function prevRef(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    document.getElementById('ref-img').src = ev.target.result;
+    document.getElementById('ref-img').style.display = 'block';
+    document.getElementById('ref-ph').style.display = 'none';
+    document.getElementById('rclr').style.display = 'block';
+  };
+  r.readAsDataURL(f);
+}
+
+function clrRef() {
+  document.getElementById('ref-img').src=''; document.getElementById('ref-img').style.display='none';
+  document.getElementById('ref-ph').style.display='block'; document.getElementById('rclr').style.display='none';
+  document.getElementById('rfile').value='';
+}
+
+function importTxt(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const lines = ev.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+    document.getElementById('pta').value = lines.join('\n');
+    document.getElementById('inote').textContent = lines.length+' prompt dari '+f.name;
+    updCnt();
+    log(`📂 Imported ${lines.length} prompts dari ${f.name}`, 'info');
+  };
+  r.readAsText(f); e.target.value='';
+}
+
+async function startGen() {
+  const raw = document.getElementById('pta').value.trim();
+  if (!raw) { toast('Tulis prompt dulu!'); return; }
+  const prompts = mode==='batch' ? raw.split('\n').map(l=>l.trim()).filter(Boolean) : [raw];
+
+  stopped = false;
+  document.getElementById('gbtn').disabled = true;
+  document.getElementById('qbar').classList.add('on');
+  document.getElementById('empty-r').style.display = 'none';
+
+  const model = document.getElementById('msel').value;
+  const [w,h] = document.getElementById('rsel').value.split('x');
+  const seedSel = document.getElementById('ssel').value;
+  const neg = document.getElementById('neg').value.trim();
+
+  prompts.forEach((p,i) => {
+    const id = Date.now()+'_'+i;
+    const seed = seedSel==='random' ? Math.floor(Math.random()*999999) : 42;
+    queue.unshift({id, prompt:p, status:'pending', url:'', model, w, h, seed, neg});
+  });
+
+  log(`🚀 ${prompts.length} prompt masuk queue · ${CONC} paralel`, 'info');
+  renderQ(); updQBar(); tick();
+}
+
+function tick() {
+  if (stopped) return;
+  while (running < CONC) {
+    const next = [...queue].reverse().find(q=>q.status==='pending');
+    if (!next) break;
+    next.status = 'running'; running++;
+    updQBar(); renderQ(); fetchImg(next);
+  }
+  const done = queue.length>0 && queue.every(q=>q.status==='success'||q.status==='failed');
+  if (done) {
+    document.getElementById('gbtn').disabled = false;
+    log('✅ Semua selesai!','ok'); updQBar(); updDash();
+  }
+}
+
+async function fetchImg(item) {
+  log(`⏳ Generate: ${item.prompt.slice(0,55)}...`);
+  try {
+    const res = await fetch(BASE+'/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        prompt: item.prompt,
+        negative: item.neg,
+        model: item.model,
+        width: parseInt(item.w),
+        height: parseInt(item.h),
+        seed: item.seed
+      }),
+      signal: AbortSignal.timeout(90000)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({error:'Server error '+res.status}));
+      throw new Error(err.error||'HTTP '+res.status);
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    item.url = url;
+    item.blobUrl = url;
+    item.status = 'success';
+    running--; sessCount++;
+    log(`✅ Done: ${item.prompt.slice(0,45)}`,'ok');
+    addH(item);
+    renderQ(); updQBar();
+    autoDL(item);
+    tick();
+  } catch(e) {
+    item.status = 'failed';
+    running--;
+    log(`❌ Failed: ${e.message||item.prompt.slice(0,40)}`,'err');
+    renderQ(); updQBar(); tick();
+  }
+}
+
+function stopQ() {
+  stopped = true;
+  queue.forEach(q=>{ if(q.status==='pending') q.status='failed'; });
+  running = 0;
+  document.getElementById('gbtn').disabled = false;
+  log('⏹ Queue dihentikan.','err');
+  renderQ(); updQBar();
+}
+
+async function autoDL(item) {
+  try {
+    const a = document.createElement('a');
+    a.href = item.blobUrl;
+    a.download = 'RAS-Studio/ras_'+Date.now()+'_'+Math.floor(Math.random()*9999)+'.jpg';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    log(`⬇ Saved: ras_${Date.now()}.jpg`,'ok');
+  } catch { log('⚠ Auto-download gagal, klik manual.','err'); }
+}
+
+function manualDL(id) {
+  const item = queue.find(q=>q.id===id);
+  if (!item||item.status!=='success') return;
+  const a = document.createElement('a');
+  a.href = item.blobUrl;
+  a.download = 'RAS-Studio/ras_manual_'+Date.now()+'.jpg';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function retry(id) {
+  const item = queue.find(q=>q.id===id); if (!item) return;
+  item.status='pending'; item.seed=Math.floor(Math.random()*999999);
+  log(`🔄 Retry: ${item.prompt.slice(0,45)}`,'info');
+  renderQ(); updQBar(); tick();
+}
+
+function cpPrompt(id) {
+  const item = queue.find(q=>q.id===id); if (!item) return;
+  navigator.clipboard.writeText(item.prompt).then(()=>toast('Prompt disalin ✓')).catch(()=>alert(item.prompt));
+}
+
+// ══ FILTER / RENDER ══
+function filt(f, btn) {
+  activeF = f;
+  document.querySelectorAll('.ft').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  renderQ();
+}
+
+function renderQ() {
+  const sc = document.getElementById('rscroll');
+  sc.querySelectorAll('.rcard').forEach(e=>e.remove());
+  const filtered = activeF==='all' ? queue : queue.filter(q=>q.status===activeF);
+  document.getElementById('empty-r').style.display = queue.length===0?'flex':'none';
+  filtered.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'rcard';
+    const lb = {pending:'Antri',running:'Proses',success:'Sukses',failed:'Gagal'}[item.status];
+    const n = queue.indexOf(item)+1;
+    const img = item.status==='success' ? `<img src="${item.blobUrl||item.url}" loading="lazy">` : `<div class="skel" style="${item.status==='failed'?'background:#fef2f2':''}"></div>`;
+    const acts = [];
+    if (item.status==='success') acts.push(`<button class="ra dl" onclick="manualDL('${item.id}')">⬇ Download</button>`);
+    acts.push(`<button class="ra" onclick="cpPrompt('${item.id}')">📋</button>`);
+    if (item.status==='failed') acts.push(`<button class="ra" onclick="retry('${item.id}')">🔄</button>`);
+    if (item.status==='success') acts.push(`<button class="ra" onclick="prevModal('${item.id}')">🔍</button>`);
+    el.innerHTML=`<div class="ri">${img}<span class="rbadge ${item.status}">${lb}</span><span class="rnum">#${n}</span></div><div class="rfoot"><div class="rpt">${esc(item.prompt)}</div><div class="ract">${acts.join('')}</div></div>`;
+    sc.appendChild(el);
+  });
+  updCounts();
+}
+
+function updCounts() {
+  const c = s => queue.filter(q=>q.status===s).length;
+  document.getElementById('ca').textContent = queue.length;
+  document.getElementById('cs').textContent = c('success');
+  document.getElementById('cr').textContent = c('running');
+  document.getElementById('cp').textContent = c('pending');
+  document.getElementById('cf').textContent = c('failed');
+}
+
+function updQBar() {
+  const c = s => queue.filter(q=>q.status===s).length;
+  document.getElementById('qr').textContent = c('running')+' running';
+  document.getElementById('qw').textContent = c('pending')+' waiting';
+  document.getElementById('qd').textContent = c('success')+' done';
+  document.getElementById('qf').textContent = c('failed')+' failed';
+  updCounts();
+}
+
+// ══ LOGS ══
+function log(msg, type) {
+  const b = document.getElementById('logb');
+  const el = document.createElement('div');
+  el.className = 'll'+(type?' '+type:'');
+  const t = new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  el.textContent = `[${t}] ${msg}`;
+  b.appendChild(el); b.scrollTop = b.scrollHeight;
+  if (!b.classList.contains('open')) { b.classList.add('open'); document.getElementById('larrow').textContent='▾'; }
+}
+
+function togLog() {
+  const b = document.getElementById('logb'); b.classList.toggle('open');
+  document.getElementById('larrow').textContent = b.classList.contains('open')?'▾':'▸';
+}
+
+// ══ TOOLS ══
+function promptBuilder() {
+  const tema = prompt('Masukkan tema (misal: doctor, teacher, business):');
+  if (!tema) return;
+  const p = `Simple flat vector illustration of a ${tema} in a modern professional setting. Minimalist background, clean design. Pastel color scheme. Modern, detailed, scalable vector style. Perfect for Adobe Stock.`;
+  tab('gen'); document.getElementById('pta').value = p; updCnt(); toast('Prompt siap! ✓');
+}
+
+function metaTool() {
+  const h = getH();
+  const subject = document.getElementById('pta').value || (h.length?h[0].prompt:'flat vector illustration');
+  const kw = subject.toLowerCase().split(/\s+/).filter(w=>w.length>3).slice(0,10).join(', ');
+  const out = `TITLE:\nFlat vector illustration of ${subject.slice(0,80)}\n\nDESCRIPTION:\n${subject.slice(0,200)}\n\nKEYWORDS:\nflat vector, illustration, ${kw}, minimalist, modern, professional, adobe stock, scalable, clean design`;
+  const w = window.open('','_blank','width=500,height=400');
+  w.document.write(`<pre style="font-family:monospace;padding:20px;white-space:pre-wrap">${out}</pre>`);
+}
+
+function exportHist() {
+  const h = getH();
+  if (!h.length) { toast('History masih kosong.'); return; }
+  const txt = h.map(i=>i.prompt).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+  a.download = 'RAS-prompts-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast(`${h.length} prompt diekspor ✓`);
+}
+
+// ══ MODAL ══
+function openModal(item) {
+  document.getElementById('mtitle').textContent = 'Preview Gambar';
+  document.getElementById('mprpt').textContent = item.prompt;
+  document.getElementById('mimg').src = item.url;
+  document.getElementById('mdl').onclick = () => {
+    const a = document.createElement('a');
+    a.href = item.url; a.download = 'RAS-Studio/ras_'+Date.now()+'.jpg';
+    a.click();
+  };
+  document.getElementById('modal').classList.add('open');
+}
+
+function prevModal(id) {
+  const item = queue.find(q=>q.id===id);
+  if (item) openModal({...item, url: item.blobUrl||item.url});
+}
+
+function closeModal(e) {
+  if (e.target.id==='modal') document.getElementById('modal').classList.remove('open');
+}
+
+// ══ TOAST ══
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ══ INIT ══
+(function() {
+  const u = curUser();
+  if (u) enterApp(u.name, u.email);
+})();
+</script>
+</body>
+</html>
