@@ -897,21 +897,22 @@ function tick() {
 async function fetchImg(item) {
   log(`⏳ Generate: ${item.prompt.slice(0,55)}...`);
   try {
-    const seed = item.seed || Math.floor(Math.random()*999999);
-    const params = new URLSearchParams({
-      model: item.model, width: String(item.w), height: String(item.h),
-      seed: String(seed), nologo: 'true'
+    const HF_TOKEN = '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';
+    const res = await fetch('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${HF_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: item.prompt.slice(0,800), num_inference_steps: 4 }),
+      signal: AbortSignal.timeout(60000)
     });
-    if (item.neg) params.append('negative', item.neg);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(item.prompt.slice(0,800))}?${params}`;
+    if (!res.ok) { const e = await res.json().catch(()=>({error:'HTTP '+res.status})); throw new Error(e.error||'HTTP '+res.status); }
+    const data = await res.json();
+    const b64 = data.images?.[0]?.b64_json || data.data?.[0]?.b64_json;
+    if (!b64) throw new Error('No image returned');
+    const url = `data:image/png;base64,${b64}`;
     item.url = url;
     item.blobUrl = url;
-    await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = resolve;
-      img.onerror = () => reject(new Error('Gagal load gambar'));
-      img.src = url;
-    });
+    const dummy = new Promise((resolve) => resolve());
+    await dummy;
     item.status = 'success';
     running--; sessCount++;
     log(`✅ Done: ${item.prompt.slice(0,45)}`,'ok');
