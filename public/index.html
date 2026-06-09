@@ -917,7 +917,7 @@ async function fetchImg(item) {
     }
 
     const data = await res.json();
-    const url = const url = data.url;
+    const url = data.url;
     item.url = url;
     item.blobUrl = url;
     item.status = 'success';
