@@ -7,34 +7,19 @@ export default async function handler(req, res) {
 
   try {
     const { prompt, negative, model = 'flux', width = 1024, height = 1024, seed } = req.body;
-    if (!prompt || prompt.trim().length === 0) {
-      return res.status(400).json({ error: 'Prompt is required' });
-    }
+    if (!prompt) return res.status(400).json({ error: 'Prompt required' });
 
-    const cleanPrompt = prompt.trim().slice(0, 1800);
     const finalSeed = seed || Math.floor(Math.random() * 999999);
-
     const params = new URLSearchParams({
       model, width: String(width), height: String(height),
-      seed: String(finalSeed), nologo: 'true', enhance: 'true', safe: 'false'
+      seed: String(finalSeed), nologo: 'true'
     });
-    if (negative && negative.trim()) params.append('negative', negative.trim());
+    if (negative) params.append('negative', negative);
 
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?${params.toString()}`;
-    const imageRes = await fetch(url, {
-      headers: { 'User-Agent': 'RAS-Studio/1.0' },
-      signal: AbortSignal.timeout(60000)
-    });
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt.slice(0,1000))}?${params}`;
+    return res.status(200).json({ url: imageUrl });
 
-    if (!imageRes.ok) return res.status(502).json({ error: `Upstream error: ${imageRes.status}` });
-
-    const buffer = await imageRes.arrayBuffer();
-    res.setHeader('Content-Type', imageRes.headers.get('content-type') || 'image/jpeg');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.status(200).send(Buffer.from(buffer));
-
-  } catch (err) {
-    if (err.name === 'TimeoutError') return res.status(504).json({ error: 'Timeout. Coba lagi.' });
-    res.status(500).json({ error: err.message || 'Server error' });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
   }
 }
