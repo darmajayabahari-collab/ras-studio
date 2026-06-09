@@ -897,29 +897,21 @@ function tick() {
 async function fetchImg(item) {
   log(`⏳ Generate: ${item.prompt.slice(0,55)}...`);
   try {
-    const res = await fetch(BASE+'/api/generate', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        prompt: item.prompt,
-        negative: item.neg,
-        model: item.model,
-        width: parseInt(item.w),
-        height: parseInt(item.h),
-        seed: item.seed
-      }),
-      signal: AbortSignal.timeout(90000)
+    const seed = item.seed || Math.floor(Math.random()*999999);
+    const params = new URLSearchParams({
+      model: item.model, width: String(item.w), height: String(item.h),
+      seed: String(seed), nologo: 'true'
     });
-
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({error:'Server error '+res.status}));
-      throw new Error(err.error||'HTTP '+res.status);
-    }
-
-    const data = await res.json();
-    const url = data.url;
+    if (item.neg) params.append('negative', item.neg);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(item.prompt.slice(0,800))}?${params}`;
     item.url = url;
     item.blobUrl = url;
+    await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = resolve;
+      img.onerror = () => reject(new Error('Gagal load gambar'));
+      img.src = url;
+    });
     item.status = 'success';
     running--; sessCount++;
     log(`✅ Done: ${item.prompt.slice(0,45)}`,'ok');
